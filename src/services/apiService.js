@@ -4,6 +4,7 @@ export default class ApiService {
   constructor() {
     this.searchQuery = '';
     this.page = 1;
+    this.maxPage = 1;
   }
   async getPictures() {
     const url = `https://pixabay.com/api/?key=${API_KEY}&q=${this.searchQuery}&image_type=photo&orientation=horizontal&safesearch=true&per_page=40&page=${this.page}`;
@@ -21,5 +22,9 @@ export default class ApiService {
 
   resetPage() {
     this.page = 1;
+  }
+
+  setMaxPage(maxPage) {
+    this.maxPage = maxPage;
   }
 }

@@ -1,4 +1,7 @@
 import ApiService from './services/apiService';
+import Notiflix from 'notiflix';
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 
 const refs = {
   form: document.querySelector('.search-form'),
@@ -8,8 +11,14 @@ const refs = {
 
 const apiService = new ApiService();
 
+const simlelightbox = new SimpleLightbox('.gallery a', {
+  captionsData: 'alt',
+  captionDelay: 250,
+});
+
 refs.form.addEventListener('submit', onSubmit);
 refs.btn.addEventListener('click', fetchPictures);
+window.addEventListener('scroll', handleScroll);
 
 hide(refs.btn);
 
@@ -17,7 +26,7 @@ function onSubmit(e) {
   e.preventDefault();
   const serchQuery = e.currentTarget.elements.searchQuery.value.trim();
   if (serchQuery === '') {
-    alert('empty query!!!');
+    Notiflix.Notify.warning('empty query!!!');
     return;
   }
   apiService.setSearchQuery(serchQuery);
@@ -32,18 +41,16 @@ function onSubmit(e) {
 async function createMarkup() {
   try {
     const { hits, total, totalHits } = await apiService.getPictures();
-    console.log(`Hooray! We found ${totalHits} images.`);
-    console.log(hits);
+    // Notiflix.Notify.success(`${total}`);
     if (totalHits === 0) {
-      throw new Error(
-        'Sorry, there are no images matching your search query. Please try again.'
-      );
+      return;
     }
+    Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
     const maxPage = Math.ceil(totalHits / 40);
     const nextPage = apiService.page;
+    apiService.setMaxPage(maxPage);
     if (nextPage > maxPage) {
       hide(refs.btn);
-      console.log("We're sorry, but you've reached the end of search results.");
     } else show(refs.btn);
     return hits.reduce((markup, hit) => markup + createCardMarkup(hit), '');
   } catch (error) {
@@ -55,9 +62,17 @@ async function fetchPictures() {
   try {
     const markup = await createMarkup();
     if (markup === undefined) {
-      throw new Error('Not found');
+      throw new Error(
+        'Sorry, there are no images matching your search query. Please try again.'
+      );
     }
     appendToGallery(markup);
+    simlelightbox.refresh();
+    if (apiService.page > apiService.maxPage) {
+      throw new Error(
+        "We're sorry, but you've reached the end of search results."
+      );
+    }
   } catch (error) {
     onError(error);
   }
@@ -70,21 +85,26 @@ function createCardMarkup({
   views,
   comments,
   downloads,
+  webformatURL,
 }) {
-  return `<div class="photo-card">
-  <img src=${largeImageURL} alt=${tags} loading="lazy" />
+  return `<div class="photo-card" uk-lightbox>
+<a href=${largeImageURL}><img src=${webformatURL} alt="${tags}" loading="lazy"/></a>
   <div class="info">
     <p class="info-item">
-      <b>Likes 9${likes}</b>
+      <b>Likes</b>
+      <span>${likes}</span>
     </p>
     <p class="info-item">
-      <b>Views ${views}</b>
+      <b>Views</b>
+      <span>${views}</span>
     </p>
     <p class="info-item">
-      <b>Comments ${comments}</b>
+      <b>Comments</b>
+      <span>${comments}</span>
     </p>
     <p class="info-item">
-      <b>Downloads ${downloads}</b>
+      <b>Downloads</b>
+      <span>${downloads}</span>
     </p>
   </div>
 </div>`;
@@ -99,7 +119,7 @@ function clearGallery() {
 }
 
 function onError(err) {
-  console.error(err);
+  Notiflix.Notify.failure(err.message);
 }
 
 function hide(el) {
@@ -108,4 +128,11 @@ function hide(el) {
 
 function show(el) {
   el.classList.remove('hide');
+}
+
+function handleScroll() {
+  const { scrollHeight, scrollTop, clientHeight } = document.documentElement;
+  if (scrollTop + clientHeight >= scrollHeight - 5) {
+    fetchPictures();
+  }
 }
