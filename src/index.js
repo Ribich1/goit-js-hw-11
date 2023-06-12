@@ -9,6 +9,8 @@ const refs = {
   btn: document.querySelector('.load-more'),
 };
 
+hide(refs.btn);
+
 const apiService = new ApiService();
 
 const simlelightbox = new SimpleLightbox('.gallery a', {
@@ -130,9 +132,12 @@ function show(el) {
   el.classList.remove('hide');
 }
 
-function handleScroll() {
-  const { scrollHeight, scrollTop, clientHeight } = document.documentElement;
-  if (scrollTop + clientHeight >= scrollHeight - 5) {
-    fetchPictures();
-  }
-}
+// function handleScroll() {
+//   const { scrollHeight, scrollTop, clientHeight } = document.documentElement;
+//   if (
+//     scrollTop + clientHeight >= scrollHeight - 5 &&
+//     apiService.maxPage < apiService.page
+//   ) {
+//     fetchPictures();
+//   } else return;
+// }
