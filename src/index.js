@@ -47,7 +47,7 @@ async function createMarkup() {
     if (totalHits === 0) {
       return;
     }
-    Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
+    // Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
     const maxPage = Math.ceil(totalHits / 40);
     const nextPage = apiService.page;
     apiService.setMaxPage(maxPage);
